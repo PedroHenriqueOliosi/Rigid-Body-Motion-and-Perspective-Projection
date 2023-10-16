@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QGridLayout, QLabel, QWid
 from PyQt5.QtGui import QDoubleValidator
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from mpl_toolkits.mplot3d import Axes3D
+from Config import *
 from numpy import array
 
 
@@ -221,7 +222,12 @@ class MainWindow(QMainWindow):
         self.ax2 = self.fig2.add_subplot(111, projection='3d')
         
         ##### Falta plotar o seu objeto 3D e os referenciais da câmera e do mundo
-        
+        self.ax2.set_xlim([0,MUNDO_TAMANHO])
+
+        self.ax2.set_ylim([0,MUNDO_TAMANHO])
+
+        self.ax2.set_zlim([0,MUNDO_TAMANHO])
+
         self.canvas2 = FigureCanvas(self.fig2)
         canvas_layout.addWidget(self.canvas2)
 

@@ -19,26 +19,33 @@ class Camera:
 
     def generate_intrinsix_matrix(self):
         self.K = np.array([[self.fsx,self.fstheta,self.ox],[0,self.fsy,self.oy],[0,0,1]])
-        self.M_canon = BASE_CANON
-
-        X = self.K@self.M_canon
-        return X
+    
+        return self.K
     
     def move(self,dx,dy,dz):
-        T = np.eye(4)
-        T[0,-1] = dx
-        T[1,-1] = dy
-        T[2,-1] = dz
-        return T
+        self.T = np.eye(4)
+        self.T[0,-1] = dx
+        self.T[1,-1] = dy
+        self.T[2,-1] = dz
+        return self.T
 
-    def z_rotation(angle):
-        rotation_matrix=np.array([[cos(angle),-sin(angle),0,0],[sin(angle),cos(angle),0,0],[0,0,1,0],[0,0,0,1]])
-        return rotation_matrix
+    def rotation(self, axis, angle):
+        if axis == 'x':
+            self.rotation_matrix=np.array([[1,0,0,0],[0, cos(angle),-sin(angle),0],[0, sin(angle), cos(angle),0],[0,0,0,1]])
+            
+        if axis == 'y':
+            self.rotation_matrix=np.array([[cos(angle),0, sin(angle),0],[0,1,0,0],[-sin(angle), 0, cos(angle),0],[0,0,0,1]])
+            
+        if axis == 'z':
+            self.rotation_matrix=np.array([[cos(angle),-sin(angle),0,0],[sin(angle),cos(angle),0,0],[0,0,1,0],[0,0,0,1]])
+        return self.rotation_matrix
 
-    def x_rotation(angle):
-        rotation_matrix=np.array([[1,0,0,0],[0, cos(angle),-sin(angle),0],[0, sin(angle), cos(angle),0],[0,0,0,1]])
-        return rotation_matrix
+    def generate_extrinsix_matrix(self):
+        self.g = self.rotation_matrix@self.T
+        return self.g
 
-    def y_rotation(angle):
-        rotation_matrix=np.array([[cos(angle),0, sin(angle),0],[0,1,0,0],[-sin(angle), 0, cos(angle),0],[0,0,0,1]])
-        return rotation_matrix
+    def update(self):
+        self.move()
+        self.rotation()
+        self.generate_extrinsix_matrix()
+        self.generate_intrinsix_matrix() 
