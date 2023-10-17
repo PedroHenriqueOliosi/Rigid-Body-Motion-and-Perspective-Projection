@@ -5,8 +5,8 @@ from PyQt5.QtGui import QDoubleValidator
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from mpl_toolkits.mplot3d import Axes3D, art3d
 from Config import *
+import numpy as np
 from Object import Object 
-from numpy import array
 
 
 ###### Crie suas funções de translação, rotação, criação de referenciais, plotagem de setas e qualquer outra função que precisar
@@ -149,7 +149,7 @@ class MainWindow(QMainWindow, Object):
 
         ##### Você deverá criar, no espaço reservado ao final, a função self.update_world ou outra que você queira 
         # Conectar a função de atualização aos sinais de clique do botão
-        update_button.clicked.connect(lambda: self.update_world(line_edits))
+        update_button.clicked.connect(lambda: self.move_world(line_edits))
 
         # Adicionar os widgets ao layout do widget line_edit_widget
         line_edit_layout.addLayout(grid_layout)
@@ -232,6 +232,11 @@ class MainWindow(QMainWindow, Object):
         self.ax2.view_init(elev=45,azim=-35)
         self.ax2.dist=10
 
+        # self.world_ref = self.set_plot(lim=[0,5])
+        self.world_ref = self.draw_arrows(POINT,BASE,self.ax2,15)
+
+        self.cam_ref = self.draw_arrows(self.M[:,3],self.M[:,0:3],self.world_ref, 10)
+
         self.canvas2 = FigureCanvas(self.fig2)
         canvas_layout.addWidget(self.canvas2)
 
@@ -259,12 +264,20 @@ class MainWindow(QMainWindow, Object):
         ax.set_xlim3d([x_middle - plot_radius, x_middle + plot_radius])
         ax.set_ylim3d([y_middle - plot_radius, y_middle + plot_radius])
         ax.set_zlim3d([z_middle - plot_radius, z_middle + plot_radius])
+    
+    def draw_arrows(self, point,base,axis,length):
+    # Plot vector of x-axis
+        axis.quiver(point[0],point[1],point[2],base[0,0],base[1,0],base[2,0],color='red',pivot='tail',  length=length)
+        # Plot vector of y-axis
+        axis.quiver(point[0],point[1],point[2],base[0,1],base[1,1],base[2,1],color='green',pivot='tail',  length=length)
+        # Plot vector of z-axis
+        axis.quiver(point[0],point[1],point[2],base[0,2],base[1,2],base[2,2],color='blue',pivot='tail',  length=length)
+
+        return axis
+
 
     def update_params_intrinsc(self, line_edits):
         return 
-
-    def update_world(self,line_edits):
-        return
 
     def update_cam(self,line_edits):
         return 

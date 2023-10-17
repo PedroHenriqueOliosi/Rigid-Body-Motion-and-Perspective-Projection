@@ -63,10 +63,9 @@ class Camera:
         self.M = self.g@self.M
         return self.M
 
-    # def update(self):
-    #     self.move()
-    #     self.rotation()
-    #     self.generate_extrinsix_matrix()
-    #     self.camera_matrix()
-    #     self.generate_intrinsix_matrix()
+    # def update_world(self, [move_array´], [rotation_array]):
+    #     self.move_world([move_array])
+    #     self.rotation_world(rotation_array)
+
+        
          
