@@ -22,14 +22,21 @@ class Camera:
     
         return self.K
     
-    def move(self,dx,dy,dz):
+    def move_world(self,dx,dy,dz):
         self.T = np.eye(4)
         self.T[0,-1] = dx
         self.T[1,-1] = dy
         self.T[2,-1] = dz
         return self.T
-
-    def rotation(self, axis, angle):
+    
+    def move_cam(self,dx,dy,dz):
+        self.M_inv = np.linalg.inv(self.M)
+        self.cam_orig = self.M_inv@self.M
+        self.move = self.move_world(self,dx,dy,dz)
+        self.new_cam2 = self.move@self.cam_orig
+        self.M = self.M@self.new_cam2
+        return self.M
+    def rotation_world(self, axis, angle):
         if axis == 'x':
             self.rotation_matrix=np.array([[1,0,0,0],[0, cos(angle),-sin(angle),0],[0, sin(angle), cos(angle),0],[0,0,0,1]])
             
@@ -40,12 +47,26 @@ class Camera:
             self.rotation_matrix=np.array([[cos(angle),-sin(angle),0,0],[sin(angle),cos(angle),0,0],[0,0,1,0],[0,0,0,1]])
         return self.rotation_matrix
 
+    def rotation_cam(self, axis, angle):
+        self.M_inv = np.linalg.inv(self.M)
+        self.cam_orig = self.M_inv@self.M
+        self.rotation = self.rotation_world(self, axis, angle)
+        self.new_cam2 = self.rotation@self.cam_orig
+        self.M = self.M@self.new_cam2
+        return self.M
+    
     def generate_extrinsix_matrix(self):
         self.g = self.rotation_matrix@self.T
         return self.g
 
-    def update(self):
-        self.move()
-        self.rotation()
-        self.generate_extrinsix_matrix()
-        self.generate_intrinsix_matrix() 
+    def camera_matrix(self):
+        self.M = self.g@self.M
+        return self.M
+
+    # def update(self):
+    #     self.move()
+    #     self.rotation()
+    #     self.generate_extrinsix_matrix()
+    #     self.camera_matrix()
+    #     self.generate_intrinsix_matrix()
+         

@@ -3,14 +3,15 @@ import matplotlib.pyplot as plt
 from PyQt5.QtWidgets import QApplication, QMainWindow, QGridLayout, QLabel, QWidget, QLineEdit, QHBoxLayout, QVBoxLayout, QPushButton,QGroupBox
 from PyQt5.QtGui import QDoubleValidator
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d import Axes3D, art3d
 from Config import *
+from Object import Object 
 from numpy import array
 
 
 ###### Crie suas funções de translação, rotação, criação de referenciais, plotagem de setas e qualquer outra função que precisar
 
-class MainWindow(QMainWindow):
+class MainWindow(QMainWindow, Object):
     def __init__(self):
         super().__init__()
 
@@ -222,11 +223,14 @@ class MainWindow(QMainWindow):
         self.ax2 = self.fig2.add_subplot(111, projection='3d')
         
         ##### Falta plotar o seu objeto 3D e os referenciais da câmera e do mundo
-        self.ax2.set_xlim([0,MUNDO_TAMANHO])
-
-        self.ax2.set_ylim([0,MUNDO_TAMANHO])
-
-        self.ax2.set_zlim([0,MUNDO_TAMANHO])
+        self.stl_plot = self.STL()
+        self.stl_vectors = self.STL_vetor() 
+        self.ax2.add_collection3d(art3d.Poly3DCollection(self.stl_vectors))
+        self.ax2.add_collection3d(art3d.Line3DCollection(self.stl_vectors, colors='k', linewidths=0.2, linestyles='-'))
+        self.ax2.auto_scale_xyz(self.stl_plot[0,:],self.stl_plot[1,:],self.stl_plot[2,:])
+        self.set_axes_equal(self.ax2)
+        self.ax2.view_init(elev=45,azim=-35)
+        self.ax2.dist=10
 
         self.canvas2 = FigureCanvas(self.fig2)
         canvas_layout.addWidget(self.canvas2)
@@ -236,7 +240,26 @@ class MainWindow(QMainWindow):
 
 
     ##### Você deverá criar as suas funções aqui
+    def set_axes_equal(self, ax):
+
+        x_limits = ax.get_xlim3d()
+        y_limits = ax.get_ylim3d()
+        z_limits = ax.get_zlim3d()
+
+        x_range = abs(x_limits[1] - x_limits[0])
+        x_middle = np.mean(x_limits)
+        y_range = abs(y_limits[1] - y_limits[0])
+        y_middle = np.mean(y_limits)
+        z_range = abs(z_limits[1] - z_limits[0])
+        z_middle = np.mean(z_limits)
+
     
+        plot_radius = 0.5*max([x_range, y_range, z_range])
+
+        ax.set_xlim3d([x_middle - plot_radius, x_middle + plot_radius])
+        ax.set_ylim3d([y_middle - plot_radius, y_middle + plot_radius])
+        ax.set_zlim3d([z_middle - plot_radius, z_middle + plot_radius])
+
     def update_params_intrinsc(self, line_edits):
         return 
 

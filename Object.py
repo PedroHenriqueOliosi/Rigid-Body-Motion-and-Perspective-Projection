@@ -1,12 +1,12 @@
 from Config import *
-import Camera
+from Camera import Camera
 from stl import mesh
 
 class Object(Camera):
     def __init__(self):
-        super.__init__()
+        super().__init__()
 
-        self.file = 'smurfcat.stl'
+        self.file = 'mario.stl'
 
     def STL(self):
         self.your_mesh = mesh.Mesh.from_file(self.file)
@@ -16,8 +16,15 @@ class Object(Camera):
 
         self.vectors = self.your_mesh.vectors
 
-        self.indo_ali = np.array([self.x.T,self.y.T,self.z.T,np.ones(self.x.size)])
+        self.stl = np.array([self.x.T,self.y.T,self.z.T,np.ones(self.x.size)])
+        return self.stl
+    
+    def STL_vetor(self):
+        self.your_mesh = mesh.Mesh.from_file(self.file)
 
+        self.vectors = self.your_mesh.vectors
+        return self.vectors
+    
     def image_projection_matrix(self):
-        self.M = self.K@BASE_CANON@self.g@self.indo_ali
-        return self.M
+        self.projection = self.K@BASE_CANON@self.g@self.stl_plot
+        return self.projection
