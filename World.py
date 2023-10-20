@@ -6,15 +6,17 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from mpl_toolkits.mplot3d import Axes3D, art3d
 from Config import *
 import numpy as np
-from Object import Object 
+from cam import Camera 
+from obj import Object
 
 
 ###### Crie suas funções de translação, rotação, criação de referenciais, plotagem de setas e qualquer outra função que precisar
 
-class MainWindow(QMainWindow, Object):
+class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-
+        self.cam = Camera()
+        self.obj = Object()
         #definindo as variaveis
         self.set_variables()
         #Ajustando a tela    
@@ -26,7 +28,6 @@ class MainWindow(QMainWindow, Object):
         self.objeto_original = [] #modificar
         self.objeto = self.objeto_original
         self.cam_original = [] #modificar
-        self.cam = [] #modificar
         self.px_base = 1280  #modificar
         self.px_altura = 720 #modificar
         self.dist_foc = 50 #modificar
@@ -146,18 +147,16 @@ class MainWindow(QMainWindow, Object):
 
         # Criar o botão de atualização
         update_button = QPushButton("Atualizar")
-
         ##### Você deverá criar, no espaço reservado ao final, a função self.update_world ou outra que você queira 
         # Conectar a função de atualização aos sinais de clique do botão
-        update_button.clicked.connect(lambda: self.move_world(line_edits))
+        update_button.clicked.connect(lambda: self.update_world(line_edits))
 
         # Adicionar os widgets ao layout do widget line_edit_widget
         line_edit_layout.addLayout(grid_layout)
         line_edit_layout.addWidget(update_button)
-
         # Retornar o widget e a lista de caixas de texto
         return line_edit_widget
-
+    
     def create_cam_widget(self, title):
         # Criar um widget para agrupar os QLineEdit
         line_edit_widget = QGroupBox(title)
@@ -206,14 +205,17 @@ class MainWindow(QMainWindow, Object):
         self.canvas1 = FigureCanvas(self.fig1)
 
         ##### Falta acertar os limites do eixo X
-        
+        self.ax1.set_xlim([0,1280])
         ##### Falta acertar os limites do eixo Y
-        
+        self.ax1.set_ylim([0,720])
+
         ##### Você deverá criar a função de projeção 
         object_2d = self.projection_2d()
 
         ##### Falta plotar o object_2d que retornou da projeção
-          
+        self.obj_view = self.ax1.plot(object_2d[0, :], object_2d[1, :], color = (0.2, 0.2, 0.2, 0.9), linewidth = 0.3) 
+
+
         self.ax1.grid('True')
         self.ax1.set_aspect('equal')  
         canvas_layout.addWidget(self.canvas1)
@@ -221,10 +223,12 @@ class MainWindow(QMainWindow, Object):
         # Criar um objeto FigureCanvas para exibir o gráfico 3D
         self.fig2 = plt.figure()
         self.ax2 = self.fig2.add_subplot(111, projection='3d')
+
+        plt.ion()
         
         ##### Falta plotar o seu objeto 3D e os referenciais da câmera e do mundo
-        self.stl_plot = self.STL()
-        self.stl_vectors = self.STL_vetor() 
+        self.stl_plot = self.obj.STL()
+        self.stl_vectors = self.obj.STL_vetor() 
         self.ax2.add_collection3d(art3d.Poly3DCollection(self.stl_vectors))
         self.ax2.add_collection3d(art3d.Line3DCollection(self.stl_vectors, colors='k', linewidths=0.2, linestyles='-'))
         self.ax2.auto_scale_xyz(self.stl_plot[0,:],self.stl_plot[1,:],self.stl_plot[2,:])
@@ -232,10 +236,10 @@ class MainWindow(QMainWindow, Object):
         self.ax2.view_init(elev=45,azim=-35)
         self.ax2.dist=10
 
-        # self.world_ref = self.set_plot(lim=[0,5])
-        self.world_ref = self.draw_arrows(POINT,BASE,self.ax2,15)
+        
+        self.world_refx, self.world_refy, self.world_refz = self.draw_arrows(POINT,BASE,self.ax2,15)
 
-        self.cam_ref = self.draw_arrows(self.M[:,3],self.M[:,0:3],self.world_ref, 10)
+        self.cam_refx, self.cam_refy, self.cam_refz = self.draw_arrows(self.cam.M[:,3],self.cam.M[:,0:3],self.ax2, 10)
 
         self.canvas2 = FigureCanvas(self.fig2)
         canvas_layout.addWidget(self.canvas2)
@@ -267,30 +271,74 @@ class MainWindow(QMainWindow, Object):
     
     def draw_arrows(self, point,base,axis,length):
     # Plot vector of x-axis
-        axis.quiver(point[0],point[1],point[2],base[0,0],base[1,0],base[2,0],color='red',pivot='tail',  length=length)
+        x = axis.quiver(point[0],point[1],point[2],base[0,0],base[1,0],base[2,0],color='red',pivot='tail',  length=length)
         # Plot vector of y-axis
-        axis.quiver(point[0],point[1],point[2],base[0,1],base[1,1],base[2,1],color='green',pivot='tail',  length=length)
+        y = axis.quiver(point[0],point[1],point[2],base[0,1],base[1,1],base[2,1],color='green',pivot='tail',  length=length)
         # Plot vector of z-axis
-        axis.quiver(point[0],point[1],point[2],base[0,2],base[1,2],base[2,2],color='blue',pivot='tail',  length=length)
+        z = axis.quiver(point[0],point[1],point[2],base[0,2],base[1,2],base[2,2],color='blue',pivot='tail',  length=length)
 
-        return axis
+        return x,y,z
 
 
     def update_params_intrinsc(self, line_edits):
-        return 
+        new_update = []
+
+        for i in range(len(line_edits)):
+            if line_edits[i].text() == '':
+                new_update.append(0)
+            else:
+                new_update.append(float(line_edits[i].text()))
+
+        self.cam.update_intrinsix_matrix(new_update)
+
+        self.update_canvas()
+
+    def update_world(self,line_edits):
+        new_update = []
+
+        for i in range(len(line_edits)):
+            if line_edits[i].text() == '':
+                new_update.append(0)
+            else:
+                new_update.append(float(line_edits[i].text()))
+
+        self.T = self.cam.generate_move_world(new_update[0],new_update[2],new_update[4])
+        self.cam.move_world()
+        self.rotation = self.cam.generate_rotation_world(new_update[1],new_update[3],new_update[5])
+        self.cam.rotation_world()
+        self.cam_refx.remove()
+        self.cam_refy.remove()
+        self.cam_refz.remove()
+        self.cam_refx, self.cam_refy, self.cam_refz = self.draw_arrows(self.cam.M[:,3],self.cam.M[:,0:3],self.ax2, 10)
+        self.g = self.cam.generate_extrinsix_matrix()
+        
 
     def update_cam(self,line_edits):
-        return 
+        new_update = []
+        for i in range(len(line_edits)):
+            if line_edits[i].text() == '':
+                new_update.append(0)
+            else:
+                new_update.append(float(line_edits[i].text()))
+
+        self.cam.move_cam(new_update[0],new_update[2],new_update[4])
+        self.cam.rotation_cam(new_update[1],new_update[3],new_update[5])
+        self.cam_refx.remove()
+        self.cam_refy.remove()
+        self.cam_refz.remove()
+        self.cam_refx, self.cam_refy, self.cam_refz = self.draw_arrows(self.cam.M[:,3],self.cam.M[:,0:3],self.ax2, 10)
+        self.g = self.cam.generate_extrinsix_matrix()
     
     def projection_2d(self):
-        return 
-    
-    def generate_intrinsic_params_matrix(self):
-        return 
-    
+       self.projection = self.cam.generate_intrinsix_matrix()@BASE_CANON@self.cam.generate_extrinsix_matrix()@self.stl_plot
+       return self.projection 
 
-    def update_canvas(self):
-        return 
+
+    def update_canvas(self, x_lim, y_lim):
+        self.x_lim = x_lim
+        self.y_lim = y_lim
+        self.ax1.set_xlim([0,self.x_lim])
+        self.ax1.set_ylim([self.y_lim,0])
     
     def reset_canvas(self):
         return

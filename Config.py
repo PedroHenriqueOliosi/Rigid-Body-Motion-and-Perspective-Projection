@@ -10,19 +10,3 @@ POINT =np.array([[0],[0],[0],[1]])
 BASE_CANON = np.hstack((e1,e2,e3))
 
 BASE = np.hstack((e1,e2,e3,POINT))
-
-PX_BASE = 1280
-
-PX_ALTURA = 720
-
-DIST_FOCAL = 50 
-
-CCD = [36,24]
-
-OX = PX_BASE / 2 
-
-OY = PX_ALTURA / 2
-
-THETA = 0
-
-MUNDO_TAMANHO = 50

@@ -1,11 +1,10 @@
 from Config import *
-from Camera import Camera
+from cam import Camera
 from stl import mesh
 
-class Object(Camera):
+class Object():
     def __init__(self):
-        super().__init__()
-
+        self.cam = Camera()
         self.file = 'mario.stl'
 
     def STL(self):
@@ -24,7 +23,3 @@ class Object(Camera):
 
         self.vectors = self.your_mesh.vectors
         return self.vectors
-    
-    def image_projection_matrix(self):
-        self.projection = self.K@BASE_CANON@self.g@self.stl_plot
-        return self.projection
